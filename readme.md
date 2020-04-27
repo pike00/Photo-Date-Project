@@ -9,7 +9,7 @@ The dependencies for this project can be found in requirements.txt, although thi
 
 Included are >300 photos that can be used to test on. The photos **generally** have a date in orange text in the bottom corner. The dates may not be in the same absolute location because some photos were scanned upside down. This is fairly straightforward to implement once the OCR part of it is working.
 
-A sample of the photos is available (here)[https://georgetown.box.com/s/1hti1kecmc3gx1409nxc6abqtgxj9a10]. 
+A sample of the photos is available [here](https://georgetown.box.com/s/1hti1kecmc3gx1409nxc6abqtgxj9a10). 
 
 ## OCR
 

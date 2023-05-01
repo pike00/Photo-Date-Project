@@ -2,53 +2,17 @@ import os
 
 from PIL import Image
 
-# import source
-from definitions import PHOTOS_RAW_DIR
+from source.definitions import *
+from source.image_util import *
 
 import matplotlib.pyplot as plt
 
 
-def rgb_to_hsv(r, g, b):
-    r, g, b = r / 255.0, g / 255.0, b / 255.0
-    mx = max(r, g, b)
-    mn = min(r, g, b)
-    df = mx - mn
-    if mx == mn:
-        h = 0
-    elif mx == r:
-        h = (60 * ((g - b) / df) + 360) % 360
-    elif mx == g:
-        h = (60 * ((b - r) / df) + 120) % 360
-    elif mx == b:
-        h = (60 * ((r - g) / df) + 240) % 360
+def filter_hsv(image,
+               hue_min, hue_max,
+               saturation_min=0, saturation_max=100,
+               value_min=0, value_max=100):
 
-    if mx == 0:
-        s = 0
-    else:
-        s = (df / mx) * 100
-    v = mx * 100
-
-    return h, s, v
-
-
-def hsv_to_hsl(h, s, v):
-    l = (2 - s) * v / 2
-
-    if l != 0:
-        if l != 1:
-            s = 0
-        elif l < 0.5:
-            s = s * v / (l * 2)
-        else:
-            s = s * v / (2 - l * 2)
-
-    return (h, s, l)
-
-
-def get_color_filtered_image(image,
-                             hue_min, hue_max,
-                             saturation_min=0, saturation_max=100,
-                             value_min=0, value_max=100):
     old_pixels = image.load()
     width, height = image.size
 
@@ -72,9 +36,11 @@ def get_color_filtered_image(image,
 
 
 
+def crop(image, crop_parameters=None):
+    if crop_parameters is None:
+        crop_parameters = (1200, 900, 1700, 1250)
 
-
-
+    return(image.crop(crop_parameters))
 
 
 
@@ -85,20 +51,12 @@ def show_images_one_per_row(filenames, crop_parameters):
     plt.ion()
     image_number = 0
     for image_filename in filenames:
-        # if (image_filename != "00000001.jpg"):
-        #     continue
-
         image_dict = {}
-
-        # image_dict['filename'] = image_filename
 
         image_raw = Image.open(os.path.join(PHOTOS_RAW_DIR, image_filename))
         # image_dict[image_filename] = image_raw
 
-        image_crop = image_raw.crop((crop_parameters['left'],
-                                    crop_parameters['upper'],
-                                    crop_parameters['right'],
-                                    crop_parameters['lower']))
+        image_crop = crop(image_raw, crop_parameters)
 
         # image_dict["Cropped"] = image_crop
 
@@ -109,11 +67,13 @@ def show_images_one_per_row(filenames, crop_parameters):
         value_min = 50
         value_max = 100
 
-        image_color_filter = get_color_filtered_image(image_crop,
-                                                                       hue_min=hue_min,
-                                                                       hue_max=hue_max,
-                                                                       saturation_min=saturation_min,
-                                                                       value_min=value_min)
+        image_color_filter = filter_hsv(image_crop,
+                                        hue_min=hue_min,
+                                        hue_max=hue_max,
+                                        saturation_min=saturation_min,
+                                        saturation_max=saturation_max,
+                                        value_min=value_min,
+                                        value_m=value_max)
         image_color_filter = image_color_filter.resize((1500,800))
 
         filtered_string = "Filtered: " + \
@@ -121,7 +81,8 @@ def show_images_one_per_row(filenames, crop_parameters):
                           str(saturation_min) + "<s<" + str(saturation_max) + " " + \
                           str(value_min) + "<v<" + str(value_max)
 
-        image_dict[filtered_string] = image_color_filter
+        image_dict[image_fil] = image_crop
+        # image_dict[filtered_string] = image_color_filter
 
         images.append(image_dict)
 
@@ -157,7 +118,7 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 def ocr_image(image):
     return pytesseract.image_to_string(
         image,
-    config='--psm 7')
+    config='--psm 11 -c tessedit_char_whitelist=0123456789')
 
 
 
@@ -199,13 +160,13 @@ def show_array_of_filtered_images():  # based on hue, saturation, value
 
     for value_min in min_range:
         for value_max in max_range:
-            image_color_filter = get_color_filtered_image(image_crop,
-                                                                           hue_min=hue_min,
-                                                                           hue_max=hue_max,
-                                                                           saturation_min=saturation_min,
-                                                                           saturation_max=saturation_max,
-                                                                           value_min=value_min,
-                                                                           value_max=value_max)
+            image_color_filter = filter_hsv(image_crop,
+                                            hue_min=hue_min,
+                                            hue_max=hue_max,
+                                            saturation_min=saturation_min,
+                                            saturation_max=saturation_max,
+                                            value_min=value_min,
+                                            value_max=value_max)
 
             f.add_subplot(rows, cols, image_index)
 
